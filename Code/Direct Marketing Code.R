@@ -519,6 +519,43 @@ marketing_data <- read.csv(here::here("Data/direct_marketing.csv"), header = T, 
 # convert to a tibble and get a glimpse of what we're working with
 (marketing_data <- as_tibble(marketing_data))
 
+# Before jumping into regression, let's take a look at the boxplot of
+# the amount spent variable
+ggplot(marketing_data, aes(y = marketing_data$AmountSpent)) +
+  geom_boxplot(outlier.colour="slateblue3",
+               outlier.size=2,
+               color = "slateblue") +
+  theme_classic() +
+  # Let's change the names of the axes and title
+  labs(title = paste("Amount Spent for", nrow(marketing_data), "customers", sep = " "),
+       subtitle = "Outliers listed as dots in the visualization",
+       caption = "*Amount Spent in U.S. Dollars") +
+  ylab("Amount Spent ($)") +
+  # Center the title and format the subtitle/caption
+  theme(plot.title = element_text(hjust = 0, color = "slateblue4"),
+        plot.subtitle = element_text(color = "slateblue", size = 10),
+        plot.caption = element_text(hjust = 1, face = "italic", color = "dark gray"),
+        # remove the x axis labels because they don't mean much for us
+        axis.text.x = element_blank()) +
+  # I thought the boxplot was too thick, so let's make it a little skinnier
+  scale_x_discrete()
+
+# We immediately notice that there are a number of outliers. I have a hunch
+# that it has to do with room type, so let's break this out further.
+ggplot(marketing_data, aes(y = AmountSpent, x = reorder(History, AmountSpent))) +
+  geom_point(color = "slateblue") +
+  theme_classic() +
+  # Let's change the names of the axes and title
+  labs(title = paste("Amount Spent for", nrow(marketing_data), "customers", sep = " "),
+       subtitle = "Outliers listed as dots in the visualization",
+       caption = "*Amount Spent in U.S. Dollars") +
+  ylab("Amount Spent ($)") +
+  xlab("Amount of Spend in Previous Year") +
+  # Center the title and format the subtitle/caption
+  theme(plot.title = element_text(hjust = 0, color = "slateblue4"),
+        plot.subtitle = element_text(color = "slateblue", size = 10),
+        plot.caption = element_text(hjust = 1, face = "italic", color = "dark gray"))
+
 ### One-hot Encoding
 # First we'll start by running a regression model with AmountSpent as our response variable 
 # and History and Salary as our explanatory variables. Before we run a linear regression 
@@ -545,6 +582,32 @@ marketing_encoded <- marketing_data %>%
 # Fit our first linear regression model
 marketing_linreg1 <- lm(AmountSpent ~ ., data = marketing_encoded)
 summary(marketing_linreg1)
+
+# Based on this model, the R-squared value is .67, which isn't too bad. The model
+# we created explains about 2/3 of the variation in the data.
+
+# What do the coefficients mean?
+# It looks like Salary has an extremely small effect on amount spent, which is 
+# Rather surprising to me. We know this because the coefficients are so small.
+
+# The history variables mean quite a bit more, however. The LowHistory variable
+# has a coefficient of 25.45, meaning that, all else held constant, if someone
+# is categorized as having a low spend in the previous year, they will spend
+# 1.96 + 25.45 = $27.41 in the current year.
+
+# The MediumHistory variable has a coefficient of 79.30, meaning that, all else 
+# held constant, if someone is categorized as having a medium spend in the previous 
+# year, they will spend 1.96 + 79.30 = $81.26 in the current year.
+
+# The HighHistory variable has a coefficient of 72.67, meaning that, all else 
+# held constant, if someone is categorized as having a high spend in the previous 
+# year, they will spend 1.96 + 72.67 = $74.63 in the current year.
+
+# What if someone has no history of spending in our dataset? Then all three History
+# variables 0 out and we're left with our intercept. Namely, that someone with no
+# spend in the previous year will spend $1.96 in the current year.
+
+
 
 
 ################################################################## 
